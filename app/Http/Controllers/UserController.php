@@ -18,16 +18,53 @@ class UserController extends Controller
 {
     public function signup(Request $request)
     {
-        $validatedData = $request->validate(User::$rules);
+        $existingUser = User::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->first();
+        if ($existingUser) {
+            return response()->json(['message' => 'Email or phone number already exists'], 200);
+        }
 
         $user = User::create([
-            'full_name' => $validatedData['full_name'],
-            'email' => $validatedData['email'],
-            'phone_number' => $validatedData['phone_number'],
-            'password' => bcrypt($validatedData['password']),
+            'full_name' => $request->full_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'password' => bcrypt($request->password),
         ]);
 
         return response()->json(['message' => 'User created successfully', 'user' => $user]);
+    }
+
+    public function editProfile(Request $request)
+    {
+        $userId = Auth::user()->id;
+        $user = User::find($userId);
+
+        if ($request->has('email')) {
+            $existingUserWithEmail = User::where('email', $request->email)->where('id', '!=', $user->id)->first();
+            if ($existingUserWithEmail) {
+                return response()->json(['message' => 'Email already exists'], 200);
+            }
+            $user->email = $request->email;
+        }
+    
+        if ($request->has('phone_number')) {
+            $existingUserWithPhoneNumber = User::where('phone_number', $request->phone_number)->where('id', '!=', $user->id)->first();
+            if ($existingUserWithPhoneNumber) {
+                return response()->json(['message' => 'Phone number already exists'], 200);
+            }
+            $user->phone_number = $request->phone_number;
+        }
+
+        if ($request->hasFile('profile_picture')) {
+            $image = $request->file('profile_picture');
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('profile_pictures'), $imageName);
+            $user->profile_picture = $imageName;
+        }
+        $user->full_name = $request->full_name;
+        $user->save();
+
+        return response()->json(['message' => 'Profile updated successfully', 'user' => $user]);
+
     }
 
     public function login(Request $request)
@@ -40,7 +77,7 @@ class UserController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
             $token = $user->createToken('AuthToken')->plainTextToken;
-            return response()->json(['message' => 'Login successful', 'token' => $token]);
+            return response()->json(['message' => 'Login successful', 'token' => $token, 'user' => $user]);
         } else {
             return response()->json(['message' => 'Invalid Credentials']);
         }
@@ -72,14 +109,24 @@ class UserController extends Controller
 
         $title = 'do not share this otp with anyone';
         $body = $otp;
-        $Password_reset_otps = Password_reset_otps::create([
-            'email' => $user->email,
-            'otp' => $otp
-        ]);
+        $existingOTP = Password_reset_otps::where('email', $user->email)->first();
+
+        if ($existingOTP) {
+            // Update existing OTP
+            $existingOTP->otp = $otp;
+            $existingOTP->save();
+        } else {
+            // Create new OTP
+            $newOTP = Password_reset_otps::create([
+                'email' => $user->email,
+                'otp' => $otp
+            ]);
+        }
+
 
         Mail::to($user->email)->send(new ForgotPasswordMail($title, $body));
-
-        return response()->json(['message' => 'OTP sent successfully']);
+        $userEmail  = $user->email;
+        return response()->json(['message' => 'OTP sent successfully', 'email' => $user->email]);
     }
 
     public function updatePassword(Request $request)
@@ -89,6 +136,7 @@ class UserController extends Controller
             'otp' => 'required|digits:4',
             'new_password' => 'required|min:6',
         ]);
+
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
@@ -120,5 +168,22 @@ class UserController extends Controller
             ->delete();
 
         return response()->json(['message' => 'Password updated successfully']);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $userId = Auth::user()->id;
+        $credentials = $request->validate([
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:6', // Assuming minimum password length is 8 characters
+        ]);
+        $userData = User::find($userId);
+        if (!Hash::check($credentials['old_password'], $userData->password)) {
+            return response()->json(['error' => 'Old password is incorrect'], 200);
+        }
+        $userData->password = bcrypt($credentials['new_password']);
+        $userData->save();
+    
+        return response()->json(['message' => 'Password changed successfully']);
     }
 }

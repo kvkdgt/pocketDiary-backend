@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasApiTokens;
 
     protected $fillable = [
-        'full_name', 'email', 'phone_number', 'password',
+        'full_name', 'email', 'phone_number', 'password','profile_picture'
     ];
 
     protected $hidden = [
@@ -30,4 +30,14 @@ class User extends Authenticatable
         'phone_number' => 'required|string|unique:users',
         'password' => 'required|string|min:6',
     ];
+
+    public function brahminsForKarm()
+    {
+        return $this->hasMany(BrahminsForKarm::class, 'brahmin_id');
+    }
+
+    public function createdKarms()
+    {
+        return $this->hasMany(Karm::class, 'created_by');
+    }
 }

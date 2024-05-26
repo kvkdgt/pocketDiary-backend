@@ -188,14 +188,25 @@ class KarmController extends Controller
     
     public function getKarmById($id)
     {
-        $karm = Karm::with(['createdBy', 'brahminsForkarm.user'])->find($id);
+        $userId = Auth::id(); // Get the authenticated user's ID
 
+        // Fetch the Karm record along with its associated createdBy and brahminsForkarm.user relationships
+        $karm = Karm::with(['createdBy', 'brahminsForkarm.user'])->find($id);
+    
         // Check if the Karm record exists
         if (!$karm) {
             return response()->json(['message' => 'Karm not found'], 404);
         }
     
-        // Return the Karm record with its associated BrahminsForkarm records
+        // Find the authenticated user's status in BrahminsForKarm
+        $authUserStatus = BrahminsForKarm::where('karm_id', $id)
+                                         ->where('brahmin_id', $userId)
+                                         ->value('status');
+    
+        // Add the authenticated user's status to the Karm object
+        $karm->auth_user_status = $authUserStatus;
+    
+        // Return the Karm record with its associated BrahminsForKarm records and the authenticated user's status
         return response()->json(['karm' => $karm]);
     }
 }

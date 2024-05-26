@@ -76,9 +76,9 @@ class KarmController extends Controller
         $userId = Auth::id(); // Get the authenticated user's ID
 
         // Query to get the data
-        $data = BrahminsForKarm::whereIn('status', ['pending', 'rejected'])
+        $data = BrahminsForKarm::whereIn('status', ['Pending', 'Rejected'])
             ->whereHas('karm', function ($query) {
-                $query->where('prayog_date', '>', Carbon::today());
+                $query->where('prayog_date', '>=', Carbon::today());
             })
             ->where('brahmin_id', $userId)
             ->with(['karm.createdBy', 'user'])

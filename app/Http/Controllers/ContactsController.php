@@ -33,6 +33,12 @@ class ContactsController extends Controller
 
     public function searchByPhoneNumber(Request $request, $phoneNumber)
     {
+        $currentUser = $request->user(); // Assuming the user is authenticated
+
+    // Check if the user is searching for their own phone number
+    if ($currentUser->phone_number == $phoneNumber) {
+        return response()->json(['error' => 'You cannot search for your own phone number']);
+    }
         $user = User::where('phone_number', $phoneNumber)->first();
         $responseData = [];
         $status = '';

@@ -16,7 +16,7 @@ class KarmController extends Controller
     {
         $user = Auth::user();
         $filter = $request->filter; // either 'upcoming' or 'previous'
-
+    
         $query = Karm::with(['createdBy', 'brahminsForKarm' => function($q) use ($user) {
             $q->where('brahmin_id', $user->id)->where('status', 'accepted');
         }])
@@ -26,13 +26,16 @@ class KarmController extends Controller
                   $q->where('brahmin_id', $user->id)->where('status', 'accepted');
               });
         });
-
+    
         if ($filter == 'upcoming') {
             $query->where('prayog_date', '>=', Carbon::today());
         } elseif ($filter == 'previous') {
             $query->where('prayog_date', '<', Carbon::today());
         }
-
+    
+        // Order by prayog_date in ascending order
+        $query->orderBy('prayog_date', 'asc');
+    
         $karms = $query->get()->map(function ($karm) {
             return [
                 'prayog_id' => $karm->id,
@@ -44,7 +47,7 @@ class KarmController extends Controller
                 'created_by_name' => $karm->createdBy->full_name
             ];
         });
-
+    
         return response()->json($karms);
     }
     public function AddKarm(Request $request)

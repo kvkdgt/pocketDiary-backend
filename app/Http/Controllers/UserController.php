@@ -18,10 +18,15 @@ class UserController extends Controller
 {
     public function signup(Request $request)
     {
-        $existingUser = User::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->first();
-        if ($existingUser) {
-            return response()->json(['message' => 'Email or phone number already exists'], 200);
-        }
+        $emailExists = User::where('email', $request->email)->exists();
+    if ($emailExists) {
+        return response()->json(['message' => 'Email already exists'], 200);
+    }
+
+    $phoneNumberExists = User::where('phone_number', $request->phone_number)->exists();
+    if ($phoneNumberExists) {
+        return response()->json(['message' => 'Phone number already exists'], 200);
+    }
 
         $user = User::create([
             'full_name' => $request->full_name,

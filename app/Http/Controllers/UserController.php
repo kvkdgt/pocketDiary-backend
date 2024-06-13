@@ -139,13 +139,13 @@ class UserController extends Controller
 
 
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
+            return response()->json(['error' => $validator->errors()]);
         }
 
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+            return response()->json(['error' => 'User not found']);
         }
 
         // Check if OTP matches
@@ -155,7 +155,7 @@ class UserController extends Controller
             ->first();
 
         if (!$otpEntry) {
-            return response()->json(['error' => 'Invalid OTP'], 400);
+            return response()->json(['error' => 'Invalid OTP']);
         }
 
         // Update user's password

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Contacts;
 use App\Models\User;
@@ -25,20 +25,23 @@ class ContactsController extends Controller
                 'id' => $contact->id,
                 'user_id' => $userData->id,
                 'name' => $userData->full_name,
-                'profile_picture'=>$userData->profile_picture
+                'profile_picture' => $userData->profile_picture
             ];
         }
-        return response()->json(['contacts' => $responseData]);
+        $pendingContacts = Contacts::where('receiver_id', $userId)
+        ->where('status', 'pending')
+        ->get()->count();
+        return response()->json(['contacts' => $responseData,'pendingRequestsCount'=>$pendingContacts]);
     }
 
     public function searchByPhoneNumber(Request $request, $phoneNumber)
     {
         $currentUser = $request->user(); // Assuming the user is authenticated
 
-    // Check if the user is searching for their own phone number
-    if ($currentUser->phone_number == $phoneNumber) {
-        return response()->json(['error' => 'You cannot search for your own phone number']);
-    }
+        // Check if the user is searching for their own phone number
+        if ($currentUser->phone_number == $phoneNumber) {
+            return response()->json(['error' => 'You cannot search for your own phone number']);
+        }
         $user = User::where('phone_number', $phoneNumber)->first();
         $responseData = [];
         $status = '';
@@ -69,7 +72,7 @@ class ContactsController extends Controller
                 'user_id' => $user->id,
                 'full_name' => $user->full_name,
                 'status' => $status,
-                'profile_picture'=>$user->profile_picture
+                'profile_picture' => $user->profile_picture
             ];
             return response()->json($responseData);
         } else {
@@ -101,8 +104,8 @@ class ContactsController extends Controller
         $pendingContacts = Contacts::where('receiver_id', $userId)
             ->where('status', 'pending')
             ->get();
-            $pendingContacts->load(['sender', 'receiver']);
-            $responseData = [];
+        $pendingContacts->load(['sender', 'receiver']);
+        $responseData = [];
 
         foreach ($pendingContacts as $contact) {
             $userData = $contact->sender;
@@ -120,7 +123,7 @@ class ContactsController extends Controller
     public function removeContact($userId)
     {
         $contact = Contacts::find($userId);
-
+        $authId = Auth::id();
         // Check if the contact exists
         if (!$contact) {
             return response()->json([
@@ -130,17 +133,20 @@ class ContactsController extends Controller
 
         // Delete the contact
         $contact->delete();
-
+        $pendingContacts = Contacts::where('receiver_id', $authId)
+        ->where('status', 'pending')
+        ->get()->count();
         // Return a JSON response indicating success
         return response()->json([
             'message' => 'Contact removed successfully',
+            'pendingRequestCount'=>$pendingContacts
         ]);
     }
 
     public function acceptContact($id)
     {
         $contact = Contacts::find($id);
-
+        $authId = Auth::id();
         // Check if the contact exists
         if (!$contact) {
             return response()->json([
@@ -151,9 +157,12 @@ class ContactsController extends Controller
         // Update the status to "accepted"
         $contact->status = 'accepted';
         $contact->save();
-
+        $pendingContacts = Contacts::where('receiver_id', $authId)
+        ->where('status', 'pending')
+        ->get()->count();
         // Return a JSON response indicating success
         return response()->json([
+            'pendingRequestCount'=>$pendingContacts,
             'message' => 'Request accepted',
         ]);
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Karm;
+use App\Models\Contacts;
 use App\Models\BrahminsForkarm;
 use Carbon\Carbon;
 
@@ -16,7 +17,7 @@ class KarmController extends Controller
     {
         $user = Auth::user();
         $filter = $request->filter; // either 'upcoming' or 'previous'
-    
+        $userId = Auth::id();
         $query = Karm::with(['createdBy', 'brahminsForKarm' => function($q) use ($user) {
             $q->where('brahmin_id', $user->id)->where('status', 'accepted');
         }])
@@ -47,8 +48,19 @@ class KarmController extends Controller
                 'created_by_name' => $karm->createdBy->full_name
             ];
         });
-    
-        return response()->json($karms);
+        $pendingKarmCount = BrahminsForKarm::whereIn('status', ['Pending', 'Rejected'])
+        ->whereHas('karm', function ($query) {
+            $query->where('prayog_date', '>=', Carbon::today());
+        })
+        ->where('brahmin_id', $userId)
+        ->with(['karm.createdBy', 'user'])
+        ->get()->count();
+        $pendingContacts = Contacts::where('receiver_id', $userId)
+        ->where('status', 'pending')
+        ->get()->count();
+        return response()->json(['pendingKarmCount' => $pendingKarmCount, 'karm' => $karms,'pendingContactRequests'=>$pendingContacts]);
+
+        
     }
     public function AddKarm(Request $request)
     {

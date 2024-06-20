@@ -100,11 +100,11 @@ class ContactsController extends Controller
         ]);
 
         $receiver = User::find($receiverId);
-
+        $senderName = $request->user()->full_name;
         if ($receiver && $receiver->fcm_token) {
             // Send notification using FCM service
             $title = 'New Contact Request';
-            $body = 'You have received a new contact request.';
+            $body = '<b>' . $senderName . '</b> sent you a new contact request.';
             $target = $receiver->fcm_token; // Assuming fcm_token is stored in the User model
             $response = $this->fcmService->sendNotification($title, $body, $target);
             // Send notification via FCMService
@@ -176,6 +176,19 @@ class ContactsController extends Controller
         // Update the status to "accepted"
         $contact->status = 'accepted';
         $contact->save();
+
+        $senderName = $contact->sender->name;
+    
+        if ( $contact->sender->fcm_token) {
+            // Send notification using FCM service
+            $title = 'New Contact Request';
+            $body = '<b>' . $senderName . '</b> accepted your contact request.';
+            $target = $contact->sender->fcm_token; // Assuming fcm_token is stored in the User model
+            $response = $this->fcmService->sendNotification($title, $body, $target);
+            // Send notification via FCMService
+           
+        }
+
         $pendingContacts = Contacts::where('receiver_id', $authId)
         ->where('status', 'pending')
         ->get()->count();

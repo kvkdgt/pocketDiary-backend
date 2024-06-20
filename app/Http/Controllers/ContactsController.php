@@ -104,7 +104,7 @@ class ContactsController extends Controller
         if ($receiver && $receiver->fcm_token) {
             // Send notification using FCM service
             $title = 'New Contact Request';
-            $body = '<b>' . $senderName . '</b> sent you a new contact request.';
+            $body = $senderName . ' sent you a new contact request.';
             $target = $receiver->fcm_token; // Assuming fcm_token is stored in the User model
             $response = $this->fcmService->sendNotification($title, $body, $target);
             // Send notification via FCMService
@@ -177,12 +177,12 @@ class ContactsController extends Controller
         $contact->status = 'accepted';
         $contact->save();
 
-        $senderName = $contact->sender->name;
+        $senderName = $contact->sender->full_name;
     
         if ( $contact->sender->fcm_token) {
             // Send notification using FCM service
-            $title = 'New Contact Request';
-            $body = '<b>' . $senderName . '</b> accepted your contact request.';
+            $title = 'Contact Request Accepted!';
+            $body = $senderName . ' accepted your contact request.';
             $target = $contact->sender->fcm_token; // Assuming fcm_token is stored in the User model
             $response = $this->fcmService->sendNotification($title, $body, $target);
             // Send notification via FCMService

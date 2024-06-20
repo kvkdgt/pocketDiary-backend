@@ -5,14 +5,21 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Karm;
+use App\Models\User;
 use App\Models\Contacts;
 use App\Models\BrahminsForkarm;
 use Carbon\Carbon;
+use App\Services\FCMService;
 
 
 class KarmController extends Controller
 
 {
+    protected $fcmService;
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
     public function getKarmData(Request $request)
     {
         $user = Auth::user();
@@ -65,6 +72,7 @@ class KarmController extends Controller
     public function AddKarm(Request $request)
     {
         $userId = Auth::user()->id;
+        $userName = Auth::user()->full_name;
 
         $user = Karm::create([
             'prayog_name' => $request->prayog_name,
@@ -76,11 +84,24 @@ class KarmController extends Controller
         ]);
 
         foreach ($request->brahmins as $brahmin) {
+            $brahminUser = User::find($userId);
+            if ($brahminUser) {
             $brahminsforKarm = BrahminsForkarm::create([
                 'brahmin_id' => $brahmin,
                 'karm_id' => $user->id,
                 'status' => 'Pending',
             ]);
+            if ($brahminUser->fcm_token) {
+                // Prepare notification details
+                $title = 'New Karm Request';
+                $body = $userName . ' sent you a new Karm request.';
+                $target = $user->fcm_token;
+    
+                // Send notification via FCMService
+                $response = $this->fcmService->sendNotification($title, $body, $target);
+            }
+
+        }
         }
 
         return response()->json(['message' => 'Karm added', 'karm' => $user]);

@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\KarmController;
+use App\Http\Controllers\PushNotificationController;
+
 
 
 Route::post('/signup', [UserController::class, 'signup']);
@@ -30,6 +32,7 @@ Route::middleware('auth:sanctum')->get('/karm/accept/{id}', [KarmController::cla
 Route::middleware('auth:sanctum')->post('/karm/update/{id}', [KarmController::class, 'updateKarm']);
 Route::middleware('auth:sanctum')->get('/karm/get/{id}', [KarmController::class, 'getKarmById']);
 Route::middleware('auth:sanctum')->post('/karm/getData', [KarmController::class, 'getKarmData']);
-
-
+Route::middleware('auth:sanctum')->post('/user/update-fcm-token', [UserController::class, 'updateFcmToken']);
+Route::middleware('auth:sanctum')->get('/send-notification', [PushNotificationController::class, 'sendPushNotification']);
+Route::post('/send-notification', [PushNotificationController::class, 'sendNotification']);
 

@@ -95,7 +95,7 @@ class KarmController extends Controller
                 // Prepare notification details
                 $title = 'New Karm Request';
                 $body = $userName . ' sent you a new Karm request.';
-                $target = $user->fcm_token;
+                $target = $brahminUser->fcm_token;
     
                 // Send notification via FCMService
                 $response = $this->fcmService->sendNotification($title, $body, $target);

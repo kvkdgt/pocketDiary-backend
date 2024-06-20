@@ -5,10 +5,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Contacts;
 use App\Models\User;
+use App\Services\FCMService;
 
 
 class ContactsController extends Controller
 {
+    protected $fcmService;
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
     public function getContacts(Request $request)
     {
         $userId = $request->user()->id;
@@ -84,6 +90,7 @@ class ContactsController extends Controller
     public function sendRequest(Request $request)
     {
         $senderId = $request->user()->id;
+        $receiverId = $request->input('receiver_id');
 
         // Create a new contact record
         $contact = Contacts::create([
@@ -91,6 +98,18 @@ class ContactsController extends Controller
             'receiver_id' => $request->receiver_id,
             'status' => 'pending', // Default status
         ]);
+
+        $receiver = User::find($receiverId);
+
+        if ($receiver && $receiver->fcm_token) {
+            // Send notification using FCM service
+            $title = 'New Contact Request';
+            $body = 'You have received a new contact request.';
+            $target = $receiver->fcm_token; // Assuming fcm_token is stored in the User model
+            $response = $this->fcmService->sendNotification($title, $body, $target);
+            // Send notification via FCMService
+           
+        }
 
         return response()->json([
             'message' => 'Request sended successfully',

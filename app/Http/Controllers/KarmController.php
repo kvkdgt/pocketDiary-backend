@@ -84,7 +84,7 @@ class KarmController extends Controller
         ]);
 
         foreach ($request->brahmins as $brahmin) {
-            $brahminUser = User::find($userId);
+            $brahminUser = User::find($brahmin);
             if ($brahminUser) {
             $brahminsforKarm = BrahminsForkarm::create([
                 'brahmin_id' => $brahmin,

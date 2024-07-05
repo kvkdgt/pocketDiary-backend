@@ -40,4 +40,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Karm::class, 'created_by');
     }
+
+    public function sentContacts()
+    {
+        return $this->hasMany(Contacts::class, 'sender_id');
+    }
+
+    public function receivedContacts()
+    {
+        return $this->hasMany(Contacts::class, 'receiver_id');
+    }
 }

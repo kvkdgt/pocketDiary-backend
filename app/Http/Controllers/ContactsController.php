@@ -198,4 +198,36 @@ class ContactsController extends Controller
             'message' => 'Request accepted',
         ]);
     }
+
+    public function recommendedContacts(Request $request)
+    {
+        $request->validate([
+            'contacts' => 'required|array',
+            'contacts.*' => 'required|string|distinct'
+        ]);
+
+        $contacts = $request->contacts;
+        $authUserId = auth()->id();
+        $users = User::whereIn('phone_number', $contacts)->get(['id', 'full_name', 'profile_picture', 'phone_number']);
+
+        $ignoredUserIds = Contacts::where(function ($query) use ($authUserId) {
+            $query->where('sender_id', $authUserId)
+                  ->orWhere('receiver_id', $authUserId);
+        })
+        ->where('status', 'accepted')
+        ->pluck('sender_id', 'receiver_id');
+        $matchedUsers = $users->filter(function ($user) use ($authUserId, $ignoredUserIds) {
+            return !($ignoredUserIds->contains($user->id) || $ignoredUserIds->contains($authUserId));
+        })->map(function ($user) {
+            return [
+                'user_id' => $user->id,
+                'full_name' => $user->full_name,
+                'profile_picture' => $user->profile_picture,
+                'phone_number' => $user->phone_number,
+            ];
+        });
+        return response()->json(['recommended_contacts' => $matchedUsers]);
+    }
+
+
 }

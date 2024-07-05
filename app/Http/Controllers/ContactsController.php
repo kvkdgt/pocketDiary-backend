@@ -177,7 +177,7 @@ class ContactsController extends Controller
         $contact->status = 'accepted';
         $contact->save();
 
-        $senderName = $contact->sender->full_name;
+        $senderName = $contact->receiver->full_name;
     
         if ( $contact->sender->fcm_token) {
             // Send notification using FCM service

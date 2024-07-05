@@ -65,7 +65,35 @@ class KarmController extends Controller
         $pendingContacts = Contacts::where('receiver_id', $userId)
         ->where('status', 'pending')
         ->get()->count();
-        return response()->json(['pendingKarmCount' => $pendingKarmCount, 'karm' => $karms,'pendingContactRequests'=>$pendingContacts]);
+
+
+     
+
+
+        $todaysQuery = Karm::with(['createdBy', 'brahminsForKarm' => function($q) use ($user) {
+            $q->where('brahmin_id', $user->id)->where('status', 'accepted');
+        }])
+        ->where('prayog_date', Carbon::today())
+        ->where(function($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhereHas('brahminsForKarm', function($q) use ($user) {
+                  $q->where('brahmin_id', $user->id)->where('status', 'accepted');
+              });
+        })
+        ->orderBy('prayog_date', 'asc');
+    
+        $todaysKarms = $todaysQuery->get()->map(function ($karm) {
+            return [
+                'prayog_id' => $karm->id,
+                'prayog_name' => $karm->prayog_name,
+                'place' => $karm->place,
+                'date' => $karm->prayog_date,
+                'created_by_id' => $karm->created_by,
+                'created_by_name' => $karm->createdBy->full_name
+            ];
+        });
+    
+        return response()->json(['pendingKarmCount' => $pendingKarmCount, 'karm' => $karms,'pendingContactRequests'=>$pendingContacts,  'todaysKarms' => $todaysKarms]);
 
         
     }

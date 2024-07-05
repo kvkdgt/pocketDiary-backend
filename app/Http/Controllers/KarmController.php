@@ -36,7 +36,7 @@ class KarmController extends Controller
         });
     
         if ($filter == 'upcoming') {
-            $query->where('prayog_date', '>=', Carbon::today());
+            $query->where('prayog_date', '>', Carbon::today());
         } elseif ($filter == 'previous') {
             $query->where('prayog_date', '<', Carbon::today());
         }

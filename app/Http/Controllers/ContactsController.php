@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Contacts;
@@ -35,9 +36,9 @@ class ContactsController extends Controller
             ];
         }
         $pendingContacts = Contacts::where('receiver_id', $userId)
-        ->where('status', 'pending')
-        ->get()->count();
-        return response()->json(['contacts' => $responseData,'pendingRequestsCount'=>$pendingContacts]);
+            ->where('status', 'pending')
+            ->get()->count();
+        return response()->json(['contacts' => $responseData, 'pendingRequestsCount' => $pendingContacts]);
     }
 
     public function searchByPhoneNumber(Request $request, $phoneNumber)
@@ -108,7 +109,7 @@ class ContactsController extends Controller
             $target = $receiver->fcm_token; // Assuming fcm_token is stored in the User model
             $response = $this->fcmService->sendNotification($title, $body, $target);
             // Send notification via FCMService
-           
+
         }
 
         return response()->json([
@@ -153,12 +154,12 @@ class ContactsController extends Controller
         // Delete the contact
         $contact->delete();
         $pendingContacts = Contacts::where('receiver_id', $authId)
-        ->where('status', 'pending')
-        ->get()->count();
+            ->where('status', 'pending')
+            ->get()->count();
         // Return a JSON response indicating success
         return response()->json([
             'message' => 'Contact removed successfully',
-            'pendingRequestCount'=>$pendingContacts
+            'pendingRequestCount' => $pendingContacts
         ]);
     }
 
@@ -178,23 +179,23 @@ class ContactsController extends Controller
         $contact->save();
 
         $senderName = $contact->receiver->full_name;
-    
-        if ( $contact->sender->fcm_token) {
+
+        if ($contact->sender->fcm_token) {
             // Send notification using FCM service
             $title = 'Contact Request Accepted!';
             $body = $senderName . ' accepted your contact request.';
             $target = $contact->sender->fcm_token; // Assuming fcm_token is stored in the User model
             $response = $this->fcmService->sendNotification($title, $body, $target);
             // Send notification via FCMService
-           
+
         }
 
         $pendingContacts = Contacts::where('receiver_id', $authId)
-        ->where('status', 'pending')
-        ->get()->count();
+            ->where('status', 'pending')
+            ->get()->count();
         // Return a JSON response indicating success
         return response()->json([
-            'pendingRequestCount'=>$pendingContacts,
+            'pendingRequestCount' => $pendingContacts,
             'message' => 'Request accepted',
         ]);
     }
@@ -202,8 +203,7 @@ class ContactsController extends Controller
     public function recommendedContacts(Request $request)
     {
         $request->validate([
-            'contacts' => 'required|array',
-            'contacts.*' => 'required|string|distinct'
+            'contacts' => 'required|array'
         ]);
 
         $contacts = $request->contacts;
@@ -212,10 +212,10 @@ class ContactsController extends Controller
 
         $ignoredUserIds = Contacts::where(function ($query) use ($authUserId) {
             $query->where('sender_id', $authUserId)
-                  ->orWhere('receiver_id', $authUserId);
+                ->orWhere('receiver_id', $authUserId);
         })
-        ->where('status', 'accepted')
-        ->pluck('sender_id', 'receiver_id');
+            ->where('status', 'accepted')
+            ->pluck('sender_id', 'receiver_id');
         $matchedUsers = $users->filter(function ($user) use ($authUserId, $ignoredUserIds) {
             return !($ignoredUserIds->contains($user->id) || $ignoredUserIds->contains($authUserId));
         })->map(function ($user) {
@@ -228,6 +228,4 @@ class ContactsController extends Controller
         });
         return response()->json(['recommended_contacts' => $matchedUsers]);
     }
-
-
 }

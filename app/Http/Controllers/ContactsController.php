@@ -205,27 +205,45 @@ class ContactsController extends Controller
         $request->validate([
             'contacts' => 'required|array'
         ]);
-
+    
+        // Retrieve contacts and the authenticated user ID
         $contacts = $request->contacts;
         $authUserId = auth()->id();
-        $users = User::whereIn('phone_number', $contacts)->get(['id', 'full_name', 'profile_picture', 'phone_number']);
+    
+        // Get users with matching phone numbers from the contacts array
+        $users = User::whereIn('phone_number', $contacts)
+                     ->where('id', '!=', $authUserId) // Exclude the authenticated user's data
+                     ->get(['id', 'full_name', 'profile_picture', 'phone_number']);
 
-        $ignoredUserIds = Contacts::where(function ($query) use ($authUserId) {
-            $query->where('sender_id', $authUserId)
-                ->orWhere('receiver_id', $authUserId);
-        })
-            ->where('status', 'accepted')
-            ->pluck('sender_id', 'receiver_id');
-        $matchedUsers = $users->filter(function ($user) use ($authUserId, $ignoredUserIds) {
-            return !($ignoredUserIds->contains($user->id) || $ignoredUserIds->contains($authUserId));
-        })->map(function ($user) {
-            return [
-                'user_id' => $user->id,
-                'full_name' => $user->full_name,
-                'profile_picture' => $user->profile_picture,
-                'phone_number' => $user->phone_number,
-            ];
-        });
-        return response()->json(['recommended_contacts' => $matchedUsers]);
+                     $ignoredContacts = Contacts::where(function ($query) use ($authUserId) {
+                        $query->where('sender_id', $authUserId)
+                              ->orWhere('receiver_id', $authUserId);
+                    })
+                    
+                    ->get(['sender_id', 'receiver_id']);
+            
+                // Filter out users based on ignored contacts
+                $filteredUsers = $users->reject(function ($user) use ($authUserId, $ignoredContacts) {
+                    foreach ($ignoredContacts as $contact) {
+                        if (($contact->sender_id == $user->id && $contact->receiver_id == $authUserId) ||
+                            ($contact->receiver_id == $user->id && $contact->sender_id == $authUserId)) {
+                            return true; // Exclude this user
+                        }
+                    }
+                    return false; // Include this user
+                });
+            
+                // Map the filtered users to the desired format
+                $recommendedContacts = $filteredUsers->map(function ($user) {
+                    return [
+                        'user_id' => $user->id,
+                        'full_name' => $user->full_name,
+                        'profile_picture' => $user->profile_picture,
+                        'phone_number' => $user->phone_number,
+                    ];
+                });
+            
+                // Return the filtered data as a JSON response
+                return response()->json(['recommended_contacts' => $recommendedContacts]);
     }
 }

@@ -110,7 +110,7 @@ class KarmController extends Controller
             'created_by' => $userId,
             'manual_brahmins' => $request->manual_brahmins
         ]);
-
+        if($request->brahmins){
         foreach ($request->brahmins as $brahmin) {
             $brahminUser = User::find($brahmin);
             if ($brahminUser) {
@@ -131,6 +131,7 @@ class KarmController extends Controller
 
         }
         }
+    }
 
         return response()->json(['message' => 'Karm added', 'karm' => $user]);
     }

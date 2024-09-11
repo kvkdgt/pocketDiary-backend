@@ -1,0 +1,103 @@
+body {
+    margin: 0px;
+    padding: 0px;
+}
+.container {
+    display: flex;
+}
+.left-container {
+    width: 40%;
+    height: 100vh;
+    background-color: #13414D;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+}
+.left-container img {
+    width: 60% !important;
+}
+.admin-panel {
+    font-size: 50px;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+}
+.hr-line {
+    background-color: #fff;
+    width: 70%;
+    height: 2px;
+}
+.right-container {
+    width: 60%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.signin-text {
+    font-size: 30px;
+    color: #262525;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    width: 45%;
+    text-align: center;
+}
+.login-form {
+    width: 45%;
+}
+.login-form label {
+    font-family: "Poppins", sans-serif;
+}
+.username {
+    margin-bottom: 15px;
+}
+
+.login-form input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    padding-right: 0px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+}
+.submit-btn {
+    margin-top: 20px;
+    width: 104%;
+    display: flex;
+    justify-content: center;
+    
+}
+.login-form input[type="submit"] {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 30px;
+    background-color: #13414D;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+@media only screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    .left-container {
+        width: 100vw;
+        height:45vh;
+    }
+    .right-container {
+        width: 100vw;
+        height:55vh;
+    }
+    .login-form{
+        width: 70%;
+    }
+}

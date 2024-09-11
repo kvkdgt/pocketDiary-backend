@@ -7,7 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\KarmController;
 use App\Http\Controllers\PushNotificationController;
-
+use App\Http\Controllers\AdminController;
 
 
 Route::post('/signup', [UserController::class, 'signup']);
@@ -37,3 +37,5 @@ Route::middleware('auth:sanctum')->post('/user/update-fcm-token', [UserControlle
 Route::middleware('auth:sanctum')->get('/send-notification', [PushNotificationController::class, 'sendPushNotification']);
 Route::post('/send-notification', [PushNotificationController::class, 'sendNotification']);
 
+// admin routes
+Route::post('/register', [AdminController::class, 'register']);

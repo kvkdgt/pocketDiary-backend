@@ -25,3 +25,4 @@ Route::get('/admin/login',[App\Http\Controllers\AdminController::class, 'login_v
 
 Route::post('/admin/loginCheck',[App\Http\Controllers\AdminController::class, 'login'])->name('loginCheck');
 Route::get('/admin/dashboard',[App\Http\Controllers\AdminController::class, 'index'])->name('admin/dashboard');
+Route::get('/admin/users',[App\Http\Controllers\AdminController::class, 'users'])->name('admin/users');

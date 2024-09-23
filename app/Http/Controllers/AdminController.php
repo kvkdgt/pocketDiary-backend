@@ -84,4 +84,31 @@ class AdminController extends Controller
         // Pass the data to the view
         return view('admin.dashboard', compact('totalUsers', 'todaysNewUsers','totalKarm', 'todaysKarm', 'upcomingKarm', 'previousKarm'));
     }
+
+    public function users(Request $request){
+        $query = User::withCount('createdKarms');
+
+        // Apply selected filter
+        switch ($request->input('filter')) {
+            case 'highest':
+                $query->orderBy('created_karms_count', 'desc');
+                break;
+            case 'lowest':
+                $query->orderBy('created_karms_count', 'asc');
+                break;
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            default:
+                // No filtering
+                break;
+        }
+    
+        $users = $query->paginate(10);
+    
+        return view('admin/users', compact('users'));
+    }
 }

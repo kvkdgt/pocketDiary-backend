@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasApiTokens;
 
     protected $fillable = [
-        'full_name', 'email', 'phone_number', 'password','profile_picture','fcm_token'
+        'full_name', 'email', 'phone_number', 'password', 'profile_picture', 'fcm_token'
     ];
 
     protected $hidden = [
@@ -49,5 +49,10 @@ class User extends Authenticatable
     public function receivedContacts()
     {
         return $this->hasMany(Contacts::class, 'receiver_id');
+    }
+
+    public function getFormattedCreatedAtAttribute()
+    {
+        return $this->created_at->format('d/m/Y');
     }
 }

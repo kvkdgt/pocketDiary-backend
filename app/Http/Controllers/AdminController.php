@@ -85,9 +85,19 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('totalUsers', 'todaysNewUsers','totalKarm', 'todaysKarm', 'upcomingKarm', 'previousKarm'));
     }
 
-    public function users(Request $request){
+    public function users(Request $request)
+    {
         $query = User::withCount('createdKarms');
-
+    
+        // Apply search by name or mobile number
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('full_name', 'like', "%{$searchTerm}%")
+                  ->orWhere('phone_number', 'like', "%{$searchTerm}%");
+            });
+        }
+    
         // Apply selected filter
         switch ($request->input('filter')) {
             case 'highest':
@@ -111,4 +121,5 @@ class AdminController extends Controller
     
         return view('admin/users', compact('users'));
     }
+    
 }

@@ -12,7 +12,9 @@
 
     .filter-container {
         display: flex;
-        justify-content: flex-end;
+        flex-direction: row;
+        /* Default direction */
+        justify-content: flex-start;
         align-items: center;
         margin-bottom: 20px;
         padding: 10px 15px;
@@ -144,6 +146,16 @@
         font-size: 14px;
     }
 
+    input[type="text"] {
+        padding: 10px;
+        border: 1px solid #13414D;
+        border-radius: 5px;
+        font-size: 16px;
+        color: #13414D;
+        margin-right: 10px;
+        /* Space between input and dropdown */
+    }
+
     .whatsapp-link {
         display: inline-block;
         padding: 8px 12px;
@@ -170,6 +182,20 @@
         /* Slight shrink effect on click */
     }
 
+    .name_profile {
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        /* Make it circular */
+        margin-right: 10px;
+        /* Space between the image and text */
+    }
+
     /* Mobile responsive styles */
     @media (max-width: 768px) {
         table {
@@ -185,20 +211,41 @@
             padding: 8px 12px;
             font-size: 12px;
         }
+
+        .filter-container {
+            flex-direction: column;
+            /* Stack elements on small screens */
+            align-items: stretch;
+            /* Stretch items to fill the container */
+        }
+
+        .filter-container input[type="text"],
+        .filter-container select {
+            width: 100%;
+            /* Full width on small screens */
+            margin-bottom: 10px;
+            /* Space between input and select */
+        }
+
+        .reset-btn {
+            width: 100%;
+            /* Make the reset button full width */
+        }
     }
 </style>
 
 <div class="body-for-users">
     <div class="filter-container">
         <form action="{{ url()->current() }}" method="GET" id="filterForm">
+            <input type="text" id="search" name="search" placeholder="Search by Name or Mobile Number" value="{{ request('search') }}" style="padding: 10px; border-radius: 5px; border: 1px solid #13414D; width: 250px;">
             <select name="filter" id="filter" onchange="this.form.submit()">
                 <option value="">-- Select Filter --</option>
                 <option value="highest" {{ request('filter') == 'highest' ? 'selected' : '' }}>Karm Created Highest to Lowest</option>
                 <option value="lowest" {{ request('filter') == 'lowest' ? 'selected' : '' }}>Karm Created Lowest to Highest</option>
-                <option value="newest" {{ request('filter') == 'newest' ? 'selected' : '' }}>Account Creation Date New to Old</option>
-                <option value="oldest" {{ request('filter') == 'oldest' ? 'selected' : '' }}>Account Creation Date Old to New</option>
+                <option value="newest" {{ request('filter') == 'newest' ? 'selected' : '' }}>Newest Account First</option>
+                <option value="oldest" {{ request('filter') == 'oldest' ? 'selected' : '' }}>Oldest Account First</option>
             </select>
-            @if(request('filter'))
+            @if(request('filter') || request('search'))
             <button type="button" onclick="resetFilter()" class="reset-btn">Reset Filter</button>
             @endif
         </form>
@@ -222,7 +269,24 @@
             @forelse ($users as $user)
             <tr>
                 <td>{{ $sr++ }}</td>
-                <td>{{ $user->full_name }}</td>
+                <td>
+                    <?php
+                    $imgUrl = env('APP_URL') . '/'.'profile_pictures/' . $user->profile_picture;
+                    $default_img = env('APP_URL') .'/'. 'profile_pictures/no-dp.jpg';
+                    ?>
+                    <div class="name_profile">
+                        <?php if ($user->profile_picture == null) {
+                        ?>
+                            <img src="{{ $default_img}}" alt="Profile Picture" class="profile-pic">
+                        <?php
+
+                        } else { ?>
+                            <img src="{{ $imgUrl}}" alt="Profile Picture" class="profile-pic">
+                        <?php } ?>
+
+                        {{ $user->full_name }}
+                    </div>
+                </td>
                 <td>{{ $user->phone_number }}</td>
                 <td>{{ $user->created_karms_count }}</td>
                 <td>{{ $user->formatted_created_at }}</td>
@@ -267,6 +331,7 @@
     // Function to reset the filter by clearing the sort parameter
     function resetFilter() {
         document.getElementById('filter').value = ''; // Clear the dropdown
+        document.getElementById('search').value = '';
         document.getElementById('filterForm').submit(); // Submit the form
     }
 </script>

@@ -25,25 +25,25 @@ class KarmController extends Controller
         $user = Auth::user();
         $filter = $request->filter; // either 'upcoming' or 'previous'
         $userId = Auth::id();
-        $query = Karm::with(['createdBy', 'brahminsForKarm' => function($q) use ($user) {
+        $query = Karm::with(['createdBy', 'brahminsForKarm' => function ($q) use ($user) {
             $q->where('brahmin_id', $user->id)->where('status', 'accepted');
         }])
-        ->where(function($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhereHas('brahminsForKarm', function($q) use ($user) {
-                  $q->where('brahmin_id', $user->id)->where('status', 'accepted');
-              });
-        });
-    
+            ->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                    ->orWhereHas('brahminsForKarm', function ($q) use ($user) {
+                        $q->where('brahmin_id', $user->id)->where('status', 'accepted');
+                    });
+            });
+
         if ($filter == 'upcoming') {
             $query->where('prayog_date', '>', Carbon::today());
         } elseif ($filter == 'previous') {
             $query->where('prayog_date', '<', Carbon::today());
         }
-    
+
         // Order by prayog_date in ascending order
         $query->orderBy('prayog_date', 'asc');
-    
+
         $karms = $query->get()->map(function ($karm) {
             return [
                 'prayog_id' => $karm->id,
@@ -56,32 +56,32 @@ class KarmController extends Controller
             ];
         });
         $pendingKarmCount = BrahminsForKarm::whereIn('status', ['Pending', 'Rejected'])
-        ->whereHas('karm', function ($query) {
-            $query->where('prayog_date', '>=', Carbon::today());
-        })
-        ->where('brahmin_id', $userId)
-        ->with(['karm.createdBy', 'user'])
-        ->get()->count();
+            ->whereHas('karm', function ($query) {
+                $query->where('prayog_date', '>=', Carbon::today());
+            })
+            ->where('brahmin_id', $userId)
+            ->with(['karm.createdBy', 'user'])
+            ->get()->count();
         $pendingContacts = Contacts::where('receiver_id', $userId)
-        ->where('status', 'pending')
-        ->get()->count();
+            ->where('status', 'pending')
+            ->get()->count();
 
 
-     
 
 
-        $todaysQuery = Karm::with(['createdBy', 'brahminsForKarm' => function($q) use ($user) {
+
+        $todaysQuery = Karm::with(['createdBy', 'brahminsForKarm' => function ($q) use ($user) {
             $q->where('brahmin_id', $user->id)->where('status', 'accepted');
         }])
-        ->where('prayog_date', Carbon::today())
-        ->where(function($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhereHas('brahminsForKarm', function($q) use ($user) {
-                  $q->where('brahmin_id', $user->id)->where('status', 'accepted');
-              });
-        })
-        ->orderBy('prayog_date', 'asc');
-    
+            ->where('prayog_date', Carbon::today())
+            ->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                    ->orWhereHas('brahminsForKarm', function ($q) use ($user) {
+                        $q->where('brahmin_id', $user->id)->where('status', 'accepted');
+                    });
+            })
+            ->orderBy('prayog_date', 'asc');
+
         $todaysKarms = $todaysQuery->get()->map(function ($karm) {
             return [
                 'prayog_id' => $karm->id,
@@ -92,10 +92,8 @@ class KarmController extends Controller
                 'created_by_name' => $karm->createdBy->full_name
             ];
         });
-    
-        return response()->json(['pendingKarmCount' => $pendingKarmCount, 'karm' => $karms,'pendingContactRequests'=>$pendingContacts,  'todaysKarms' => $todaysKarms]);
 
-        
+        return response()->json(['pendingKarmCount' => $pendingKarmCount, 'karm' => $karms, 'pendingContactRequests' => $pendingContacts,  'todaysKarms' => $todaysKarms]);
     }
     public function AddKarm(Request $request)
     {
@@ -110,28 +108,27 @@ class KarmController extends Controller
             'created_by' => $userId,
             'manual_brahmins' => $request->manual_brahmins
         ]);
-        if($request->brahmins){
-        foreach ($request->brahmins as $brahmin) {
-            $brahminUser = User::find($brahmin);
-            if ($brahminUser) {
-            $brahminsforKarm = BrahminsForkarm::create([
-                'brahmin_id' => $brahmin,
-                'karm_id' => $user->id,
-                'status' => 'Pending',
-            ]);
-            if ($brahminUser->fcm_token) {
-                // Prepare notification details
-                $title = 'New Karm Request';
-                $body = $userName . ' sent you a new Karm request.';
-                $target = $brahminUser->fcm_token;
-    
-                // Send notification via FCMService
-                $response = $this->fcmService->sendNotification($title, $body, $target);
-            }
+        if ($request->brahmins) {
+            foreach ($request->brahmins as $brahmin) {
+                $brahminUser = User::find($brahmin);
+                if ($brahminUser) {
+                    $brahminsforKarm = BrahminsForkarm::create([
+                        'brahmin_id' => $brahmin,
+                        'karm_id' => $user->id,
+                        'status' => 'Pending',
+                    ]);
+                    if ($brahminUser->fcm_token) {
+                        // Prepare notification details
+                        $title = 'New Karm Request';
+                        $body = $userName . ' sent you a new Karm request.';
+                        $target = $brahminUser->fcm_token;
 
+                        // Send notification via FCMService
+                        $response = $this->fcmService->sendNotification($title, $body, $target);
+                    }
+                }
+            }
         }
-        }
-    }
 
         return response()->json(['message' => 'Karm added', 'karm' => $user]);
     }
@@ -209,14 +206,14 @@ class KarmController extends Controller
     public function updateKarm(Request $request, $id)
     {
         $userId = Auth::user()->id;
-    
+
         // Find the Karm record by its ID
         $karm = Karm::find($id);
-    
+
         if (!$karm) {
             return response()->json(['message' => 'Karm not found'], 404);
         }
-    
+
         // Update the Karm record
         $karm->update([
             'prayog_name' => $request->prayog_name,
@@ -225,11 +222,11 @@ class KarmController extends Controller
             'remarks' => $request->remarks,
             'manual_brahmins' => $request->manual_brahmins
         ]);
-    
+
         // If brahmins are provided, update the BrahminsForKarm records
         if ($request->has('brahmins')) {
             $existingBrahminsForKarm = BrahminsForKarm::where('karm_id', $id)->get()->keyBy('brahmin_id');
-    
+
             foreach ($request->brahmins as $brahminId) {
                 if (!$existingBrahminsForKarm->has($brahminId)) {
                     // Create new BrahminsForKarm record if it doesn't exist
@@ -240,37 +237,37 @@ class KarmController extends Controller
                     ]);
                 }
             }
-    
+
             // Optionally, you can remove brahmins that are no longer in the updated list
             $updatedBrahminIds = collect($request->brahmins);
             BrahminsForKarm::where('karm_id', $id)
                 ->whereNotIn('brahmin_id', $updatedBrahminIds)
                 ->delete();
         }
-    
+
         return response()->json(['message' => 'Karm updated', 'karm' => $karm]);
     }
-    
+
     public function getKarmById($id)
     {
         $userId = Auth::id(); // Get the authenticated user's ID
 
         // Fetch the Karm record along with its associated createdBy and brahminsForkarm.user relationships
         $karm = Karm::with(['createdBy', 'brahminsForkarm.user'])->find($id);
-    
+
         // Check if the Karm record exists
         if (!$karm) {
             return response()->json(['message' => 'Karm not found'], 404);
         }
-    
+
         // Find the authenticated user's status in BrahminsForKarm
         $authUserStatus = BrahminsForKarm::where('karm_id', $id)
-                                         ->where('brahmin_id', $userId)
-                                         ->value('status');
-    
+            ->where('brahmin_id', $userId)
+            ->value('status');
+
         // Add the authenticated user's status to the Karm object
         $karm->auth_user_status = $authUserStatus;
-    
+
         // Return the Karm record with its associated BrahminsForKarm records and the authenticated user's status
         return response()->json(['karm' => $karm]);
     }
@@ -282,10 +279,10 @@ class KarmController extends Controller
     
         // Query to get Karm data along with associated Brahmins (users) for tomorrow's Karm
         $karmData = Karm::where('prayog_date', $tomorrow)
-        ->with(['brahminsForKarm' => function($query) {
-            $query->where('status', 'accepted'); // Filter for accepted status
-        }, 'brahminsForKarm.user']) // Eager load BrahminsForKarm and related User
-        ->get();
+            ->with(['brahminsForKarm' => function($query) {
+                $query->where('status', 'accepted'); // Filter for accepted status
+            }, 'brahminsForKarm.user', 'createdBy']) // Eager load BrahminsForKarm, related User, and creator
+            ->get();
     
         // Structure the data for better readability (Karm with Users)
         $result = $karmData->map(function($karm) {
@@ -299,14 +296,21 @@ class KarmController extends Controller
                     return [
                         'user_id' => $brahminForKarm->user->id,
                         'user_name' => $brahminForKarm->user->full_name,
-                        'fcm_token' => $brahminForKarm->user->fcm_token, // Assuming User model has 'name' field
+                        'fcm_token' => $brahminForKarm->user->fcm_token,
                         'status' => $brahminForKarm->status
                     ];
-                })
+                }),
+                'creator' => [
+                    'user_id' => $karm->createdBy->id,
+                    'user_name' => $karm->createdBy->full_name,
+                    'fcm_token' => $karm->createdBy->fcm_token,
+                ]
             ];
         });
-
+    
+        // Sending notifications to Brahmins (users with accepted status)
         foreach ($result as $karm) {
+            // Notify Brahmins
             foreach ($karm['users'] as $user) {
                 // Prepare notification title and body
                 $title = 'Hey '.$user['user_name'].', Karm Reminder';
@@ -318,15 +322,26 @@ class KarmController extends Controller
                 // Send notification via FCMService
                 if (!empty($target)) {
                     $response = $this->fcmService->sendNotification($title, $body, $target);
-    
-                    // Optionally log the response for debugging purposes
                     \Log::info('Notification sent to ' . $user['user_name'] . ': ' . $response);
                 } else {
                     \Log::warning('No FCM token found for user: ' . $user['user_name']);
                 }
             }
+    
+            // Notify the creator of the Karm
+            if (!empty($karm['creator']['fcm_token'])) {
+                $creatorTitle = 'Hey '.$karm['creator']['user_name'].', Karm Reminder';
+                $creatorBody = 'You have "' . $karm['prayog_name'] . '" at "' . $karm['place'] . '" tomorrow.';
+    
+                $creatorTarget = $karm['creator']['fcm_token'];
+                $creatorResponse = $this->fcmService->sendNotification($creatorTitle, $creatorBody, $creatorTarget);
+                \Log::info('Notification sent to creator ' . $karm['creator']['user_name'] . ': ' . $creatorResponse);
+            } else {
+                \Log::warning('No FCM token found for creator: ' . $karm['creator']['user_name']);
+            }
         }
     
         return $result;
     }
+    
 }

@@ -36,6 +36,8 @@ Route::middleware('auth:sanctum')->post('/karm/getData', [KarmController::class,
 Route::middleware('auth:sanctum')->post('/user/update-fcm-token', [UserController::class, 'updateFcmToken']);
 Route::middleware('auth:sanctum')->get('/send-notification', [PushNotificationController::class, 'sendPushNotification']);
 Route::post('/send-notification', [PushNotificationController::class, 'sendNotification']);
+Route::get('/karm/reminder', [KarmController::class, 'getKarmAndUsersForTomorrow']);
+
 
 // admin routes
 Route::post('/register', [AdminController::class, 'register']);

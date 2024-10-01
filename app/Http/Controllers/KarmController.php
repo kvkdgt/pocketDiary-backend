@@ -274,4 +274,59 @@ class KarmController extends Controller
         // Return the Karm record with its associated BrahminsForKarm records and the authenticated user's status
         return response()->json(['karm' => $karm]);
     }
+
+    public function getKarmAndUsersForTomorrow()
+    {
+        // Get tomorrow's date
+        $tomorrow = Carbon::tomorrow()->toDateString();
+    
+        // Query to get Karm data along with associated Brahmins (users) for tomorrow's Karm
+        $karmData = Karm::where('prayog_date', $tomorrow)
+        ->with(['brahminsForKarm' => function($query) {
+            $query->where('status', 'accepted'); // Filter for accepted status
+        }, 'brahminsForKarm.user']) // Eager load BrahminsForKarm and related User
+        ->get();
+    
+        // Structure the data for better readability (Karm with Users)
+        $result = $karmData->map(function($karm) {
+            return [
+                'karm_id' => $karm->id,
+                'prayog_name' => $karm->prayog_name,
+                'prayog_date' => $karm->prayog_date,
+                'place' => $karm->place,
+                'remarks' => $karm->remarks,
+                'users' => $karm->brahminsForKarm->map(function($brahminForKarm) {
+                    return [
+                        'user_id' => $brahminForKarm->user->id,
+                        'user_name' => $brahminForKarm->user->full_name,
+                        'fcm_token' => $brahminForKarm->user->fcm_token, // Assuming User model has 'name' field
+                        'status' => $brahminForKarm->status
+                    ];
+                })
+            ];
+        });
+
+        foreach ($result as $karm) {
+            foreach ($karm['users'] as $user) {
+                // Prepare notification title and body
+                $title = 'Hey '.$user['user_name'].', Karm Reminder';
+                $body = 'You have "' . $karm['prayog_name'] . '" at "' . $karm['place'] . '" tomorrow.';
+    
+                // Get the user's FCM token
+                $target = $user['fcm_token'];
+    
+                // Send notification via FCMService
+                if (!empty($target)) {
+                    $response = $this->fcmService->sendNotification($title, $body, $target);
+    
+                    // Optionally log the response for debugging purposes
+                    \Log::info('Notification sent to ' . $user['user_name'] . ': ' . $response);
+                } else {
+                    \Log::warning('No FCM token found for user: ' . $user['user_name']);
+                }
+            }
+        }
+    
+        return $result;
+    }
 }

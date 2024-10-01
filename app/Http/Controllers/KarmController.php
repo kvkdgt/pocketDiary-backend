@@ -322,9 +322,7 @@ class KarmController extends Controller
                 // Send notification via FCMService
                 if (!empty($target)) {
                     $response = $this->fcmService->sendNotification($title, $body, $target);
-                    \Log::info('Notification sent to ' . $user['user_name'] . ': ' . $response);
                 } else {
-                    \Log::warning('No FCM token found for user: ' . $user['user_name']);
                 }
             }
     
@@ -335,9 +333,7 @@ class KarmController extends Controller
     
                 $creatorTarget = $karm['creator']['fcm_token'];
                 $creatorResponse = $this->fcmService->sendNotification($creatorTitle, $creatorBody, $creatorTarget);
-                \Log::info('Notification sent to creator ' . $karm['creator']['user_name'] . ': ' . $creatorResponse);
             } else {
-                \Log::warning('No FCM token found for creator: ' . $karm['creator']['user_name']);
             }
         }
     

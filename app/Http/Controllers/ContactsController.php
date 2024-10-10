@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Contacts;
 use App\Models\User;
 use App\Services\FCMService;
+use Carbon\Carbon;
 
 
 class ContactsController extends Controller
@@ -32,7 +33,8 @@ class ContactsController extends Controller
                 'id' => $contact->id,
                 'user_id' => $userData->id,
                 'name' => $userData->full_name,
-                'profile_picture' => $userData->profile_picture
+                'profile_picture' => $userData->profile_picture,
+                'created_at'=>Carbon::parse($userData->created_at)->format('d/m/Y'),
             ];
         }
         $pendingContacts = Contacts::where('receiver_id', $userId)
@@ -79,7 +81,8 @@ class ContactsController extends Controller
                 'user_id' => $user->id,
                 'full_name' => $user->full_name,
                 'status' => $status,
-                'profile_picture' => $user->profile_picture
+                'profile_picture' => $user->profile_picture,
+                'created_at'=>Carbon::parse($user->created_at)->format('d/m/Y'),
             ];
             return response()->json($responseData);
         } else {
@@ -133,6 +136,7 @@ class ContactsController extends Controller
                 'id' => $contact->id,
                 'name' => $userData->full_name,
                 'profile_picture' => $userData->profile_picture,
+                'created_at'=>Carbon::parse($userData->created_at)->format('d/m/Y'),
             ];
         }
         return response()->json([
@@ -240,6 +244,7 @@ class ContactsController extends Controller
                         'full_name' => $user->full_name,
                         'profile_picture' => $user->profile_picture,
                         'phone_number' => $user->phone_number,
+                        'created_at'=>Carbon::parse($user->created_at)->format('d/m/Y'),
                     ];
                 });
             

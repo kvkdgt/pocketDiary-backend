@@ -68,7 +68,38 @@
         color: red;
         font-size: 12px;
     }
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
+    .alert-success .alert-icon {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+
+    .alert-success button {
+        background: none;
+        border: none;
+        color: #155724;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0;
+        transition: color 0.3s;
+    }
+
+    .alert-success button:hover {
+        color: #0a3c1a;
+    }
     .submit-btn {
         padding: 12px 25px;
         background-color: #13414D;

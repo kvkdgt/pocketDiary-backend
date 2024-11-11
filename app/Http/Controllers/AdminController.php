@@ -154,14 +154,13 @@ class AdminController extends Controller
             // Store the image in a public directory or cloud storage
             // Example: store in public folder (this could be cloud storage like S3 or Firebase Storage)
             $image->move(public_path('notifications'), $imageName);
-            $imageUrl = env('APP_URL') . '/' . 'notifications/' . $imageName;
+            $imageUrl =  'http://karmtrack.krishivtech.in/' . 'notifications/' . $imageName;
         }
 
-      
+        
         // Pass the image URL to the service
         $response = $this->fcmService->sendNotificationWithImage($title, $body, $target, $imageUrl);
-
         // Return success message
-        return back()->with('success', 'Notification data received!');
+        return back()->with('success', 'Notifications Sent!');
     }
 }

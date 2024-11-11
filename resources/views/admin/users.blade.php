@@ -307,24 +307,41 @@
     <!-- Pagination Links -->
     @if ($users->hasPages())
     <ul class="pagination">
-        @if ($users->onFirstPage())
-        @else
-        <li><a href="{{ $users->previousPageUrl() }}&filter={{ request('filter') }}"> Previous</a></li>
+        {{-- Previous Page Link --}}
+        @if (!$users->onFirstPage())
+            <li><a href="{{ $users->previousPageUrl() }}&filter={{ request('filter') }}">Previous</a></li>
         @endif
 
-        @foreach ($users->getUrlRange(1, $users->lastPage()) as $page => $url)
-        @if ($page == $users->currentPage())
-        <li class="active"><a href="#">{{ $page }}</a></li>
-        @else
-        <li><a href="{{ $url }}&filter={{ request('filter') }}">{{ $page }}</a></li>
+        {{-- First Page Link --}}
+        @if ($users->currentPage() > 3)
+            <li><a href="{{ $users->url(1) }}&filter={{ request('filter') }}">1</a></li>
+            <li><span>...</span></li>
         @endif
+
+        {{-- Page Number Links --}}
+        @foreach (range(1, $users->lastPage()) as $page)
+            @if ($page >= $users->currentPage() - 2 && $page <= $users->currentPage() + 2)
+                @if ($page == $users->currentPage())
+                    <li class="active"><a href="#">{{ $page }}</a></li>
+                @else
+                    <li><a href="{{ $users->url($page) }}&filter={{ request('filter') }}">{{ $page }}</a></li>
+                @endif
+            @endif
         @endforeach
 
+        {{-- Last Page Link --}}
+        @if ($users->currentPage() < $users->lastPage() - 2)
+            <li><span>...</span></li>
+            <li><a href="{{ $users->url($users->lastPage()) }}&filter={{ request('filter') }}">{{ $users->lastPage() }}</a></li>
+        @endif
+
+        {{-- Next Page Link --}}
         @if ($users->hasMorePages())
-        <li><a href="{{ $users->nextPageUrl() }}&filter={{ request('filter') }}">Next </a></li>
+            <li><a href="{{ $users->nextPageUrl() }}&filter={{ request('filter') }}">Next</a></li>
         @endif
     </ul>
-    @endif
+@endif
+
 </div>
 
 <script>

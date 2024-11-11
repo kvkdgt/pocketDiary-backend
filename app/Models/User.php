@@ -55,4 +55,11 @@ class User extends Authenticatable
     {
         return $this->created_at->format('d/m/Y');
     }
+    public function countAcceptedContacts()
+{
+    return Contacts::where(function ($query) {
+        $query->where('sender_id', $this->id)
+              ->orWhere('receiver_id', $this->id);
+    })->where('status', 'accepted')->count();
+}
 }

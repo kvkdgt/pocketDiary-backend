@@ -24,5 +24,15 @@ class PushNotificationController extends Controller
         $response = $this->fcmService->sendNotification($title, $body, $target);
 
         return response()->json($response);
-       }
+    }
+    public function sendNotificationWithImage(Request $request)
+    {
+        $title = $request->input('title');
+        $body = $request->input('body');
+        $target = $request->input('target'); // FCM token or topic
+        $image = $request->input('image');
+        $response = $this->fcmService->sendNotification($title, $body, $target, $image);
+
+        return response()->json($response);
+    }
 }

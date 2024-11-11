@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->delete('/contacts/remove/{userId}', [Contacts
 Route::middleware('auth:sanctum')->put('/contacts/accept/{id}', [ContactsController::class, 'acceptContact']);
 Route::middleware('auth:sanctum')->post('/contacts/get/recommended', [ContactsController::class, 'recommendedContacts']);
 
+
 Route::middleware('auth:sanctum')->post('/karm/add', [KarmController::class, 'AddKarm']);
 Route::middleware('auth:sanctum')->get('/karm/requests', [KarmController::class, 'getPendingKarmsForAuthUser']);
 Route::middleware('auth:sanctum')->get('/karm/reject/{id}', [KarmController::class, 'rejectKarm']);

@@ -29,6 +29,8 @@ class FCMService
                 'notification' => [
                     'title' => $title,
                     'body' => $body,
+                    
+                   
                 ],
                 // 'data' => [
                 //     // Custom data payload

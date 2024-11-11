@@ -144,7 +144,6 @@ class AdminController extends Controller
         // Print the form data
         $title = $request->input('notification_title');
         $body = $request->input('notification_description');
-        $target = 'eAySfnENQxud5pNIFbmSSF:APA91bFoRUmDtNO01w-gMcmwseqFETVMFUfs_f-DAGkWJbm2JGFC2YcdYDSYJrF0Lce9P3smbE7-4PrjIOG1r-Q1hjfrBlnzeZ9MCeFLnq7hXuJSefHjgFM';
 
         // If an image is uploaded, print the file details and upload it
         $imageUrl = null;
@@ -156,10 +155,11 @@ class AdminController extends Controller
             $image->move(public_path('notifications'), $imageName);
             $imageUrl =  'http://karmtrack.krishivtech.in/' . 'notifications/' . $imageName;
         }
-
-        
+        $users = User::whereNotNull('fcm_token')->get();
+        foreach ($users as $user) {
+            $this->fcmService->sendNotificationWithImage($title, $body, $user->fcm_token, $imageUrl);
+        }
         // Pass the image URL to the service
-        $response = $this->fcmService->sendNotificationWithImage($title, $body, $target, $imageUrl);
         // Return success message
         return back()->with('success', 'Notifications Sent!');
     }

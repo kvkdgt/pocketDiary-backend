@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Karm;
 use App\Models\Password_reset_otps;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -19,14 +20,14 @@ class UserController extends Controller
     public function signup(Request $request)
     {
         $emailExists = User::where('email', $request->email)->exists();
-    if ($emailExists) {
-        return response()->json(['message' => 'Email already exists'], 200);
-    }
+        if ($emailExists) {
+            return response()->json(['message' => 'Email already exists'], 200);
+        }
 
-    $phoneNumberExists = User::where('phone_number', $request->phone_number)->exists();
-    if ($phoneNumberExists) {
-        return response()->json(['message' => 'Phone number already exists'], 200);
-    }
+        $phoneNumberExists = User::where('phone_number', $request->phone_number)->exists();
+        if ($phoneNumberExists) {
+            return response()->json(['message' => 'Phone number already exists'], 200);
+        }
 
         $user = User::create([
             'full_name' => $request->full_name,
@@ -50,7 +51,7 @@ class UserController extends Controller
             }
             $user->email = $request->email;
         }
-    
+
         if ($request->has('phone_number')) {
             $existingUserWithPhoneNumber = User::where('phone_number', $request->phone_number)->where('id', '!=', $user->id)->first();
             if ($existingUserWithPhoneNumber) {
@@ -69,7 +70,6 @@ class UserController extends Controller
         $user->save();
 
         return response()->json(['message' => 'Profile updated successfully', 'user' => $user]);
-
     }
 
     public function login(Request $request)
@@ -188,7 +188,7 @@ class UserController extends Controller
         }
         $userData->password = bcrypt($credentials['new_password']);
         $userData->save();
-    
+
         return response()->json(['message' => 'Password changed successfully']);
     }
 
@@ -204,4 +204,8 @@ class UserController extends Controller
 
         return response()->json(['message' => 'FMC Token updated successfully.']);
     }
+
+
+
+    
 }

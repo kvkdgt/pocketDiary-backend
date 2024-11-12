@@ -79,7 +79,7 @@
                 <h2>Notification</h2>
                 <p>Send targeted push notifications with personalized offers, updates, and announcements to engage your audience instantly.</p>
             </div>
-            <button class="edit-button">Go to Notifications</button>
+            <button class="edit-button"  onclick="window.location.href='{{ route('admin/marketing/notifications') }}'">Go to Notifications</button>
         </div>
     </div>
 </div>

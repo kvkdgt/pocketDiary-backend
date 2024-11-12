@@ -124,7 +124,7 @@ class AdminController extends Controller
                 break;
         }
 
-        $users = $query->paginate(5);
+        $users = $query->paginate(10);
 
         return view('admin/users', compact('users'));
     }
@@ -142,6 +142,7 @@ class AdminController extends Controller
     public function sendCustomNotification(Request $request)
     {
         // Print the form data
+        $audience = $request->input('user_select');
         $title = $request->input('notification_title');
         $body = $request->input('notification_description');
 
@@ -155,12 +156,20 @@ class AdminController extends Controller
             $image->move(public_path('notifications'), $imageName);
             $imageUrl =  'http://karmtrack.krishivtech.in/' . 'notifications/' . $imageName;
         }
-        $users = User::whereNotNull('fcm_token')->get();
-        foreach ($users as $user) {
-            $this->fcmService->sendNotificationWithImage($title, $body, $user->fcm_token, $imageUrl);
+        if ($audience == 'today_joined') {
+            $users = User::whereDate('created_at', now()->toDateString())
+                         ->whereNotNull('fcm_token')
+                         ->get();
+            foreach ($users as $user) {
+                $this->fcmService->sendNotificationWithImage($title, $body, $user->fcm_token, $imageUrl);
+            }
+        } elseif ($audience == 'all') {
+            $users = User::whereNotNull('fcm_token')->get();
+            foreach ($users as $user) {
+                $this->fcmService->sendNotificationWithImage($title, $body, $user->fcm_token, $imageUrl);
+            }
         }
-        // Pass the image URL to the service
-        // Return success message
+
         return back()->with('success', 'Notifications Sent!');
     }
 }

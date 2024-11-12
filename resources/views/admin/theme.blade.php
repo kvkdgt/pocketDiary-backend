@@ -43,7 +43,7 @@
                         } else {
                             $usersClass = 'section-item';
                         }
-                        if (Route::currentRouteName() == 'admin/marketing') {
+                        if (Route::currentRouteName() == 'admin/marketing' || Route::currentRouteName() ==  'admin/marketing/notifications') {
                             $marketingClass = 'section-item active';
                         } else {
                             $marketingClass = 'section-item';

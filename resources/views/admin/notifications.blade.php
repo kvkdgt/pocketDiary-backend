@@ -170,6 +170,8 @@
             <label for="user_select">Send To:</label>
             <select name="user_select" id="user_select">
                 <option value="all">All Users</option>
+                <option value="today_joined">Today Joined</option>
+
                 <!-- <option value="selected">Selected Users</option> -->
             </select>
         </div>

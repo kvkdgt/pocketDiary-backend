@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\ForgotPasswordMail;
+use Carbon\Carbon;
+
 
 class UserController extends Controller
 {
@@ -205,6 +207,27 @@ class UserController extends Controller
         return response()->json(['message' => 'FMC Token updated successfully.']);
     }
 
+    public function getUserById($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found']);
+        }
+
+        // Prepare response data
+        $response = [
+            'full_name' => $user->full_name,
+            'email' => $user->email,
+            'phone_number' => $user->phone_number,
+            'profile_picture' => $user->profile_picture,
+            'total_created_karms' => $user->createdKarms()->count(),
+            'total_accepted_contacts' => $user->countAcceptedContacts(),
+            'created_at'=>Carbon::parse($user->created_at)->format('d/m/Y'),
+        ];
+
+        return response()->json($response, 200);
+    }
 
 
     

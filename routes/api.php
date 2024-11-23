@@ -17,6 +17,8 @@ Route::post('/sendOTP', [UserController::class, 'sendOTP']);
 Route::post('/updatePassword', [UserController::class, 'updatePassword']);
 Route::middleware('auth:sanctum')->post('/changePassword', [UserController::class, 'changePassword']);
 Route::middleware('auth:sanctum')->post('/editProfile', [UserController::class, 'editProfile']);
+Route::middleware('auth:sanctum')->get('/getUserById/{id}', [UserController::class, 'getUserById']);
+
 
 Route::middleware('auth:sanctum')->get('/contacts/get', [ContactsController::class, 'getContacts']);
 Route::middleware('auth:sanctum')->get('/contacts/search/{phoneNumber}', [ContactsController::class, 'searchByPhoneNumber']);

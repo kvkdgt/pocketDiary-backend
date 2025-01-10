@@ -14,11 +14,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\ForgotPasswordMail;
+use App\Services\FCMService;
 use Carbon\Carbon;
 
 
 class UserController extends Controller
 {
+    protected $fcmService;
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
     public function signup(Request $request)
     {
         $emailExists = User::where('email', $request->email)->exists();
@@ -37,6 +43,18 @@ class UserController extends Controller
             'phone_number' => $request->phone_number,
             'password' => bcrypt($request->password),
         ]);
+
+        $receiver = User::find(1);
+        $senderName = $request->full_name;
+        if ($receiver && $receiver->fcm_token) {
+            // Send notification using FCM service
+            $title = 'New Bhudev joined!!!';
+            $body = $senderName . ' joined Karmtrack.';
+            $target = $receiver->fcm_token; // Assuming fcm_token is stored in the User model
+            $response = $this->fcmService->sendNotification($title, $body, $target);
+            // Send notification via FCMService
+
+        }
 
         return response()->json(['message' => 'User created successfully', 'user' => $user]);
     }
